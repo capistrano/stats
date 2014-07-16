@@ -1,0 +1,11 @@
+# Load DSL and Setup Up Stages
+require 'capistrano/setup'
+require 'capistrano-stats'
+
+namespace :deploy do
+  task :starting do
+    puts "Done"
+  end
+end
+
+task :default => 'deploy:starting'
