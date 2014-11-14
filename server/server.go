@@ -1,11 +1,9 @@
 package main
 
 import (
-	"encoding/json"
 	"fmt"
 	"log"
 	"net"
-	"net/http"
 	"strings"
 	"time"
 
@@ -47,31 +45,6 @@ func NewMetricMessage(wireLine string) *MetricMessage {
 	return nil
 }
 
-type metricHandler struct {
-	c redis.Conn
-}
-
-func (self metricHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	period := r.URL.Query().Get("period")
-	totalPeriod, err := redis.Int(self.c.Do("SCARD", period))
-	if err != nil {
-		panic(err)
-	}
-	uniquePeriod, err := redis.Int(self.c.Do("SCARD", fmt.Sprintf("%s|anon_project_hash", period)))
-	if err != nil {
-		panic(err)
-	}
-	ms := MetricSummary{
-		TotalPeriod:  totalPeriod,
-		UniquePeriod: uniquePeriod,
-	}
-	msj, err := json.MarshalIndent(ms, "", "   ")
-	if err != nil {
-		panic(err)
-	}
-	w.Write(msj)
-}
-
 func main() {
 
 	c, err := redis.Dial("tcp", ":6379")
@@ -79,12 +52,6 @@ func main() {
 		panic(err)
 	}
 	defer c.Close()
-
-	http.Handle("/", &metricHandler{c})
-	err = http.ListenAndServe(":80", nil)
-	if err != nil {
-		log.Fatalf("Error listening, %v", err)
-	}
 
 	udpAddress, err := net.ResolveUDPAddr("udp4", ":1200")
 
