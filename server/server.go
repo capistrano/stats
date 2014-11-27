@@ -28,9 +28,9 @@ type MetricMessage struct {
 
 func NewMetricMessage(wireLine string) *MetricMessage {
 	s := strings.Split(wireLine, "|")
-	dateTime, err := time.Parse(time.RFC3339Nano, "2013-06-05T14:10:43.678Z")
+	dateTime, err := time.Parse(time.RFC3339Nano, s[1])
 	if err != nil {
-		log.Fatalf("Error parsing DateTime %s: %s\n", s[0], err)
+		log.Fatalf("Error parsing DateTime %s: %s\n", s[1], err)
 		return nil
 	}
 	return &MetricMessage{
