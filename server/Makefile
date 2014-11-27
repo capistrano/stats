@@ -12,3 +12,5 @@ run:
 dist:
 	goxc -pv=${ref}${wip}
 	aws s3 cp pkg/${ref}${wip}/linux_amd64/server s3://metrics-binaries/${ref}${wip}/server
+
+.PHONY: run dist
