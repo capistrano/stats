@@ -12,16 +12,24 @@ module Capistrano
       @pwd = Pathname.new(pwd)
     end
 
-    def enabled?
+    def user_preference
       ask_to_enable unless File.exists?(sentry_file)
-      File.read(sentry_file).chomp == "true"
+      pref = File.read(sentry_file)
+      if pref.chomp == "true"
+        :full
+      elsif pref.chomp == "false"
+        :ping
+      else
+        pref && pref.to_sym
+      end
     end
 
     def collect
+      return if user_preference == :none
       socket = UDPSocket.new
-      message.anonymize! unless enabled?
+      message.anonymize! unless user_preference == :full
       socket.send(message.to_s, 0, *destination)
-    rescue SocketError
+    rescue
       warn "There was a problem tracking statistics, please report to https://github.com/capistrano/stats"
     end
 
@@ -52,7 +60,12 @@ module Capistrano
     def ask_to_enable
       return false unless $stdin.tty?
       show_prompt
-      result = ask_to_confirm("Do you want to enable statistics? (y/N): ")
+      result = ask_to_confirm("Do you want to enable statistics? (y/N): ") ? :full : :ping
+      if result != :full
+        if ask_to_confirm("Do you also want to disable the UDP ping to the metrics server? (y/N): ")
+          result = :none
+        end
+      end
       show_thank_you_note(result)
       write_setting(result)
     end
@@ -68,9 +81,9 @@ module Capistrano
     end
 
     def show_thank_you_note(result)
-      puts(result ? "Thank you, you may wish to add .capistrano/ to your source
-           control database to avoid future prompts" : "Your preferences have
-           been saved.")
+      puts(result == :full ?
+        "Thank you, you may wish to add .capistrano/ to your source control database to avoid future prompts" :
+        "Your preferences have been saved.")
     end
 
     def message
@@ -95,7 +108,7 @@ module Capistrano
     def write_setting(value)
       Dir.mkdir(sentry_file.dirname) rescue nil
       File.open(sentry_file, "wb") do |f|
-        f.write(value)
+        f.write(value.to_sym)
       end
     end
 
