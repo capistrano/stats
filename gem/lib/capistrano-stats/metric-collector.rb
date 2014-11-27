@@ -18,8 +18,8 @@ module Capistrano
     end
 
     def collect
+      return unless enabled?
       socket = UDPSocket.new
-      message.anonymize! unless enabled?
       socket.send(message.to_s, 0, *destination)
     rescue SocketError
       warn "There was a problem tracking statistics, please report to https://github.com/capistrano/stats"
