@@ -1,0 +1,9 @@
+{
+	"ArtifactsDest": "pkg",
+	"Tasks": [
+		"xc"
+	],
+	"BuildConstraints": "linux,amd64",
+	"Resources": {},
+	"FormatVersion": "0.8"
+}
