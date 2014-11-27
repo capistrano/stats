@@ -12,7 +12,7 @@ Gem::Specification.new do |gem|
   gem.summary       = %q{Official metrics to help the development direction of Capistrano}
   gem.homepage      = "http://metrics.capistranorb.com/"
 
-  gem.files         = `git ls-files gem`.split($/)
+  gem.files         = `git ls-files`.split($/)
   gem.require_paths = ["lib"]
 
   gem.licenses      = ['MIT']

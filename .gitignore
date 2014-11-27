@@ -1,2 +1,5 @@
 .capistrano/
 .ruby-version
+vm/
+dump.rdb
+*.gem

@@ -3,5 +3,3 @@ namespace :metrics do
     Capistrano::MetricCollector.new(Dir.pwd).collect
   end
 end
-
-task 'deploy:starting' => 'metrics:collect'
