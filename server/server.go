@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	"log"
 	"net"
@@ -26,23 +27,32 @@ type MetricMessage struct {
 	AnonProjectHash   string
 }
 
-func NewMetricMessage(wireLine string) *MetricMessage {
+var (
+	ErrUnmarshalingPayload = errors.New("Failed to unmarshal payload, probably anonymous message.")
+)
+
+func NewMetricMessage(wireLine string) (*MetricMessage, error) {
+	var err error
+	var mM *MetricMessage
 	s := strings.Split(wireLine, "|")
 	dateTime, err := time.Parse(time.RFC3339Nano, s[1])
 	if err != nil {
-		log.Fatalf("Error parsing DateTime %s: %s\n", s[1], err)
-		return nil
+		mM = &MetricMessage{
+			Uuid: uuid.NewV1().String(),
+		}
+		err = ErrUnmarshalingPayload
+	} else {
+		mM = &MetricMessage{
+			Uuid:              uuid.NewV1().String(),
+			ProtoVer:          s[0],
+			DateTime:          dateTime,
+			RubyVersion:       s[2],
+			RubyPlatform:      s[3],
+			CapistranoVersion: s[4],
+			AnonProjectHash:   s[5],
+		}
 	}
-	return &MetricMessage{
-		Uuid:              uuid.NewV1().String(),
-		ProtoVer:          s[0],
-		DateTime:          dateTime,
-		RubyVersion:       s[2],
-		RubyPlatform:      s[3],
-		CapistranoVersion: s[4],
-		AnonProjectHash:   s[5],
-	}
-	return nil
+	return mM, err
 }
 
 func main() {
@@ -82,38 +92,53 @@ func main() {
 			return
 		}
 
-		mm := NewMetricMessage(string(buf[0:n]))
+		mm, err := NewMetricMessage(string(buf[0:n]))
 
-		buckets := []string{
-			fmt.Sprintf("%02d-%02d-%04d", mm.DateTime.Day(), mm.DateTime.Month(), mm.DateTime.Year()),
-			fmt.Sprintf("%02d-%04d", mm.DateTime.Month(), mm.DateTime.Year()),
-			fmt.Sprintf("%04d", mm.DateTime.Year()),
-		}
-
-		metrics := map[string]string{
-			"anon_project_hash":  mm.AnonProjectHash,
-			"capistrano_version": mm.CapistranoVersion,
-			"proto_ver":          mm.ProtoVer,
-			"ruby_platform":      mm.RubyPlatform,
-			"ruby_version":       mm.RubyVersion,
-		}
-
-		for k, v := range metrics {
-			_, err := c.Do("HSET", mm.Uuid, k, v)
-			if err != nil {
-				log.Fatalln(err)
+		log.Println(err)
+		if err == ErrUnmarshalingPayload {
+			// log.Println(err)
+			// Anoymous Message
+			buckets := []string{
+				fmt.Sprintf("%02d-%02d-%04d", time.Now().UTC().Day(), time.Now().UTC().Month(), time.Now().UTC().Year()),
+				fmt.Sprintf("%02d-%04d", time.Now().UTC().Month(), time.Now().UTC().Year()),
+				fmt.Sprintf("%04d", time.Now().UTC().Year()),
 			}
-		}
+			for _, bucket := range buckets {
+				c.Do("SADD", fmt.Sprintf("%s", bucket), mm.Uuid)
+			}
+		} else {
 
-		for _, bucket := range buckets {
+			buckets := []string{
+				fmt.Sprintf("%02d-%02d-%04d", mm.DateTime.Day(), mm.DateTime.Month(), mm.DateTime.Year()),
+				fmt.Sprintf("%02d-%04d", mm.DateTime.Month(), mm.DateTime.Year()),
+				fmt.Sprintf("%04d", mm.DateTime.Year()),
+			}
 
-			c.Do("SADD", fmt.Sprintf("%s", bucket), mm.Uuid)
-			c.Do("SADD", fmt.Sprintf("%s|anon_project_hash", bucket), mm.AnonProjectHash)
-			c.Do("SADD", fmt.Sprintf("%s|capistrano_versions", bucket), mm.CapistranoVersion)
-			c.Do("SADD", fmt.Sprintf("%s|ruby_platforms", bucket), mm.RubyPlatform)
-			c.Do("SADD", fmt.Sprintf("%s|ruby_versions", bucket), mm.RubyVersion)
-			c.Do("SADD", fmt.Sprintf("%s|proto_versions", bucket), mm.ProtoVer)
+			metrics := map[string]string{
+				"anon_project_hash":  mm.AnonProjectHash,
+				"capistrano_version": mm.CapistranoVersion,
+				"proto_ver":          mm.ProtoVer,
+				"ruby_platform":      mm.RubyPlatform,
+				"ruby_version":       mm.RubyVersion,
+			}
 
+			for k, v := range metrics {
+				_, err := c.Do("HSET", mm.Uuid, k, v)
+				if err != nil {
+					log.Fatalln(err)
+				}
+			}
+
+			for _, bucket := range buckets {
+
+				c.Do("SADD", fmt.Sprintf("%s", bucket), mm.Uuid)
+				c.Do("SADD", fmt.Sprintf("%s|anon_project_hash", bucket), mm.AnonProjectHash)
+				c.Do("SADD", fmt.Sprintf("%s|capistrano_versions", bucket), mm.CapistranoVersion)
+				c.Do("SADD", fmt.Sprintf("%s|ruby_platforms", bucket), mm.RubyPlatform)
+				c.Do("SADD", fmt.Sprintf("%s|ruby_versions", bucket), mm.RubyVersion)
+				c.Do("SADD", fmt.Sprintf("%s|proto_versions", bucket), mm.ProtoVer)
+
+			}
 		}
 
 	}
