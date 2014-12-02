@@ -29,7 +29,14 @@ module Capistrano
       socket = UDPSocket.new
       message.anonymize! unless user_preference == :full
       socket.send(message.to_s, 0, *destination)
-    rescue
+    rescue SocketError, Errno::EACCES, Errno::EADDRINUSE, Errno::EADDRNOTAVAIL,
+      Errno::EAFNOSUPPORT, Errno::EALREADY, Errno::EBADF, Errno::ECONNREFUSED,
+      Errno::ECONNRESET, Errno::EFAULT, Errno::EHOSTUNREACH, Errno::EINPROGRESS,
+      Errno::EINTR, Errno::EINVAL, Errno::EIO, Errno::EISCONN, Errno::ELOOP,
+      Errno::ENAMETOOLLONG, Errno::ENAMETOOLONG, Errno::ENETDOWN,
+      Errno::ENETUNREACH, Errno::ENOBUFS, Errno::ENOENT, Errno::ENOSR,
+      Errno::ENOTDIR, Errno::ENOTSOCK, Errno::EOPNOTSUPP, Errno::EPROTOTYPE,
+      Errno::ETIMEDOUT, Errno::EWOULDBLOCK
       warn "There was a problem tracking statistics, please report to https://github.com/capistrano/stats"
     end
 
@@ -75,7 +82,7 @@ module Capistrano
         Would you like to enable statistics?  Here is an example message we would
         send:
 
-        #{message}
+      #{message}
 
       EOF
     end
