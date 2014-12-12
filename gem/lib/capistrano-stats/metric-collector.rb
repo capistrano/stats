@@ -33,7 +33,7 @@ module Capistrano
       Errno::EAFNOSUPPORT, Errno::EALREADY, Errno::EBADF, Errno::ECONNREFUSED,
       Errno::ECONNRESET, Errno::EFAULT, Errno::EHOSTUNREACH, Errno::EINPROGRESS,
       Errno::EINTR, Errno::EINVAL, Errno::EIO, Errno::EISCONN, Errno::ELOOP,
-      Errno::ENAMETOOLLONG, Errno::ENAMETOOLONG, Errno::ENETDOWN,
+      Errno::ENAMETOOLONG, Errno::ENETDOWN,
       Errno::ENETUNREACH, Errno::ENOBUFS, Errno::ENOENT, Errno::ENOSR,
       Errno::ENOTDIR, Errno::ENOTSOCK, Errno::EOPNOTSUPP, Errno::EPROTOTYPE,
       Errno::ETIMEDOUT, Errno::EWOULDBLOCK
