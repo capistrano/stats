@@ -54,3 +54,16 @@ with both version two and three for testing purposes:
       ** Execute default
       ** Invoke load:defaults (first_time)
       ** Execute load:defaults
+
+## Disable Statistics Collection
+
+The initial statistics collection prompt may break your automated build or
+deployment systems. If you would like to disable the collection you can create
+a .capstrano folder in your project and a file within called metrics with the
+content "false"
+
+```
+cd <project directory>
+mkdir .capistrano
+echo "false" > .capistrano/metrics
+```
