@@ -20,7 +20,7 @@ Gem::Specification.new do |gem|
   gem.post_install_message = <<-eos
     Capistrano will ask you the next time you run it if you would like to share
     anonymous usage statistics with the maintainance team to help guide our
-    development efforts. We emplore you to opt-in, but we understand if your
+    development efforts. We implore you to opt-in, but we understand if your
     privacy is important to you in this regard.
   eos
 
